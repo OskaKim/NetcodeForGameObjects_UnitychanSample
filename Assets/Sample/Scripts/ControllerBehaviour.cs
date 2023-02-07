@@ -6,21 +6,30 @@ using UTJ.NetcodeGameObjectSample;
 
 namespace UTJ.NetcodeGameObjectSample
 {
+    public enum ButtonType {
+        SeSample1,
+        SeSample2,
+        SeSample3,
+        SeSample4,
+        SeSample5,
+        Attack
+    }
+
     [NetworkUtility.RequireAtHeadless]
     public class ControllerBehaviour : MonoBehaviour
     {
         private class ButtonListner
         {
-            private int index;
-            private System.Action<int> action;
-            public ButtonListner(System.Action<int> act, int idx)
+            private ButtonType type;
+            private System.Action<ButtonType> action;
+            public ButtonListner(System.Action<ButtonType> act, ButtonType type)
             {
                 this.action = act;
-                this.index = idx;
+                this.type = type;
             }
             public void Exec()
             {
-                this.action(this.index);
+                this.action(this.type);
             }
         }
 
@@ -55,6 +64,7 @@ namespace UTJ.NetcodeGameObjectSample
             KeyCode.Alpha3,
             KeyCode.Alpha4,
             KeyCode.Alpha5,
+            KeyCode.F,
             };
             this.SetupCallback();
 
@@ -66,15 +76,16 @@ namespace UTJ.NetcodeGameObjectSample
         {
             for (int i = 0; i < buttons.Length; ++i)
             {
-                var listner = new ButtonListner(this.OnClickBtn, i);
+                var type = (ButtonType)i;
+                var listner = new ButtonListner(this.OnClickBtn, type);
                 buttons[i].onClick.AddListener(listner.Exec);
             }
         }
 
         // ボタンが押された時の処理
-        void OnClickBtn(int idx)
+        void OnClickBtn(ButtonType type)
         {
-            buttonClickedBuffer[idx] = true;
+            buttonClickedBuffer[(int)type] = true;
         }
 
         // 破棄時の処理
@@ -123,8 +134,9 @@ namespace UTJ.NetcodeGameObjectSample
 
 
         // ボタンを押したかどうか( PC 1-5キー、ボタン)
-        public bool IsKeyDown(int idx)
+        public bool IsKeyDown(ButtonType buttonType)
         {
+            int idx = (int)buttonType;
             bool result = Input.GetKeyDown(keys[idx]);
             result |= buttonClickedBuffer[idx];
             return result;
@@ -265,7 +277,7 @@ namespace UTJ.NetcodeGameObjectSample
             if (dummyInputVoiceTimer < 0.0f)
             {
                 dummyInputVoiceTimer = UnityEngine.Random.Range(5.0f, 20.0f);
-                this.OnClickBtn(UnityEngine.Random.Range(0, 4));
+                this.OnClickBtn((ButtonType)UnityEngine.Random.Range(0, 4));
             }
             dummyInputVoiceTimer -= Time.deltaTime;
         }

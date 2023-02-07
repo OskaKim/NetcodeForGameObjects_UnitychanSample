@@ -31,6 +31,7 @@ namespace Unity.Netcode.Samples
             {
                 if (CanCommitToTransform)
                 {
+                    Debug.Log("try commit to server");
                     TryCommitTransformToServer(transform, NetworkManager.LocalTime.Time);
                 }
             }

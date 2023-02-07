@@ -14,6 +14,7 @@ namespace UTJ.NetcodeGameObjectSample
     // キャラクターの動きのコントローラー
     public class CharacterMoveController : Unity.Netcode.NetworkBehaviour
     {
+        [SerializeField] private WeaponBehaviour weaponBehaviour;
         public TextMesh playerNameTextMesh;
         public ParticleSystem soundPlayingParticle;
         public AudioSource audioSouceComponent;
@@ -141,14 +142,29 @@ namespace UTJ.NetcodeGameObjectSample
             // キーを押して音を流します
             for (int i = 0; i < this.audios.Length; ++i)
             {
-                if (ControllerBehaviour.Instance.IsKeyDown(i))
+                var type = (ButtonType)i;
+                if (ControllerBehaviour.Instance.IsKeyDown(type))
                 {
                     // 他の人に流してもらうために、サーバーにRPCします。
                     PlayAudioRequestOnServerRpc(i);
                 }
             }
+            if (ControllerBehaviour.Instance.IsKeyDown(ButtonType.Attack)) {
+                AttacServerRpc();
+            }
             // 入力の通知を通知します
             ControllerBehaviour.Instance.OnUpdateEnd();
+        }
+
+        [Unity.Netcode.ServerRpc(RequireOwnership = true)]
+        private void AttacServerRpc() {
+            // PlayAudioを呼び出します
+            AttacClientRpc();
+        }
+
+        [Unity.Netcode.ClientRpc]
+        private void AttacClientRpc() {
+            weaponBehaviour.Fire();
         }
 
         // Clientからサーバーに呼び出されるRPCです。
