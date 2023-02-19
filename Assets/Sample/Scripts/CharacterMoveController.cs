@@ -7,7 +7,7 @@ using Unity.Netcode.Components;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Unity.Services.Authentication;
 
 namespace UTJ.NetcodeGameObjectSample
 {
@@ -15,10 +15,11 @@ namespace UTJ.NetcodeGameObjectSample
     public class CharacterMoveController : Unity.Netcode.NetworkBehaviour
     {
         [SerializeField] private WeaponBehaviour weaponBehaviour;
+        [SerializeField] private UnityEngine.UI.Text text;
         public TextMesh playerNameTextMesh;
         public ParticleSystem soundPlayingParticle;
         public AudioSource audioSouceComponent;
-
+        public static CharacterMoveController Mine { get; private set; }
 
         public AudioClip[] audios;
 
@@ -48,6 +49,8 @@ namespace UTJ.NetcodeGameObjectSample
 
         private void Awake()
         {
+            text = GameObject.Find("Log").GetComponent<UnityEngine.UI.Text>();
+
             this.rigidbodyComponent = this.GetComponent<Rigidbody>();
             this.animatorComponent = this.GetComponent<Animator>();
 
@@ -74,6 +77,7 @@ namespace UTJ.NetcodeGameObjectSample
                 SetPlayerNameServerRpc( ConfigureConnectionBehaviour.playerName);
                 // コントローラーの有効化をします
                 ControllerBehaviour.Instance.Enable();
+                Mine = this;
             }
         }
         private new void OnDestroy()
@@ -157,14 +161,17 @@ namespace UTJ.NetcodeGameObjectSample
         }
 
         [Unity.Netcode.ServerRpc(RequireOwnership = true)]
-        private void AttacServerRpc() {
-            // PlayAudioを呼び出します
-            AttacClientRpc();
+        public void AttacServerRpc(ServerRpcParams serverRpcParams = default) {
+            var clientId = serverRpcParams.Receive.SenderClientId;
+            Debug.Log(clientId);
+            //AttackClientRpc(AuthenticationService.Instance.PlayerId);
         }
 
         [Unity.Netcode.ClientRpc]
-        private void AttacClientRpc() {
-            weaponBehaviour.Fire();
+        private void AttackClientRpc(string playerId) {
+            Debug.Log("Attack Client Rpc");
+            text.text = $"Attack Client Rpc : {playerId}";
+            //weaponBehaviour.Fire();
         }
 
         // Clientからサーバーに呼び出されるRPCです。
